@@ -6,7 +6,7 @@ This nuget package will help you to fetch images (JPEG and PNG) from a given url
 ##Installation
 To install Image Fetcher, run the following command in the Package Manager Console
 
-PM> Install-Package ImageFetcher
+<pre>PM> Install-Package ImageFetcher</pre>
 
 ##Quick Start
 It is recommended that you install ImageFetcher via NuGet.
@@ -19,7 +19,7 @@ ImageFetcher imageFetcher = new ImageFetcher();
 
 2)	Call GeImages() method for fetching images from a given url
 
-var imagesUrls = imageFetcher.GetImages("www.sampleweburl.com”);
+<pre>var imagesUrls = imageFetcher.GetImages("www.sampleweburl.com”);</pre>
 
 3)	Parameters
 
