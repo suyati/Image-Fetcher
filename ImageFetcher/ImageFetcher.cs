@@ -39,8 +39,8 @@ namespace Suyati.ImageFetcher
 
             var request = new RestRequest { DateFormat = DataFormat.Xml.ToString(), Method = Method.GET };
 
-            ServicePointManager.Expect100Continue = true;
-            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+            //ServicePointManager.Expect100Continue = true;
+            //ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
             // Rest response for the given url
             IRestResponse response = client.Execute(request);
 
