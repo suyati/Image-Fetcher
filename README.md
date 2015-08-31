@@ -1,5 +1,6 @@
 # Image-Fetcher
-Travis:[![Travis](https://travis-ci.org/amalayil/Image-Fetcher.svg?branch=master)](https://travis-ci.org/amalayil/Image-Fetcher)
+Travis:    [![Travis](https://travis-ci.org/amalayil/Image-Fetcher.svg?branch=master)](https://travis-ci.org/amalayil/Image-Fetcher)
+
 Fetching images from a particular url
 
 This nuget package will help you to fetch images (JPEG and PNG) from a given url .You can configure the image type and maximum number of images.
