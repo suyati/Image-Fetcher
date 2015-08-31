@@ -24,71 +24,76 @@ namespace Suyati.ImageFetcher
         /// <param name="OgImage"></param>
         /// <param name="MaxImageCount"></param>
         /// <returns></returns>
-        public List<string> GetImages(string Url, bool Jpeg = false, bool Png = false, bool OgImage = false, int MaxImageCount = 10)
+        public List<string> GetImages(string Url, bool Jpeg = true, bool Png = false, bool OgImage = false, int MaxImageCount = 2)
         {
-            
-                // Add http to a non-http url
-                Url = AddHttpToUrl(Url);
 
-                if (!IsValidUrl(Url))
+            // Add http to a non-http url
+            Url = AddHttpToUrl(Url);
+
+            if (!IsValidUrl(Url))
+            {
+                throw new ArgumentException("Invalid Url");
+            }
+
+            var client = new RestClient { BaseUrl = new System.Uri(Url) };
+
+            var request = new RestRequest { DateFormat = DataFormat.Xml.ToString(), Method = Method.GET };
+
+            ServicePointManager.Expect100Continue = true;
+            ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
+            // Rest response for the given url
+            IRestResponse response = client.Execute(request);
+
+            if (response.StatusCode != HttpStatusCode.OK)
+            {
+                throw new WebException(response.ErrorMessage, response.ErrorException);
+            }
+
+            HtmlDocument webhtml = new HtmlDocument();
+
+            // response content is loaded into HtmlDocument
+            webhtml.LoadHtml(response.Content);
+
+            string imageUrl = string.Empty;
+            var imageUrls = new List<string>();
+
+            //Fetching og image 
+            if (OgImage)
+            {
+                imageUrl = GetOGImageUrl(webhtml, response.ResponseUri);
+                if (!string.IsNullOrEmpty(imageUrl))
                 {
-                    throw new ArgumentException("Invalid Url");
+                    imageUrls.Add(imageUrl);
+                    MaxImageCount--;
+                }
+            }
+
+            if (webhtml != null && webhtml.DocumentNode != null)
+            {
+                string selectedImageFormats = GetSelectedImageFormat(Jpeg, Png);
+
+                if (string.IsNullOrEmpty(selectedImageFormats))
+                {
+                    return imageUrls;
                 }
 
-                var client = new RestClient { BaseUrl = new System.Uri(Url) };
+                HtmlNodeCollection imageCollection = webhtml.DocumentNode.SelectNodes(selectedImageFormats);
 
-                var request = new RestRequest { DateFormat = DataFormat.Xml.ToString(), Method = Method.GET };
-
-                ServicePointManager.Expect100Continue = true;
-                ServicePointManager.SecurityProtocol = SecurityProtocolType.Tls12;
-                // Rest response for the given url
-                IRestResponse response = client.Execute(request);
-
-                if (response.StatusCode != HttpStatusCode.OK)
+                if (imageCollection != null)
                 {
-                    throw  new WebException(response.ErrorMessage, response.ErrorException);
-                }
-
-                HtmlDocument webhtml = new HtmlDocument();
-
-                // response content is loaded into HtmlDocument
-                webhtml.LoadHtml(response.Content);
-
-                string imageUrl = string.Empty;
-                var imageUrls = new List<string>();
-
-                //Fetching og image 
-                if (OgImage)
-                {
-                    imageUrl = GetOGImageUrl(webhtml, response.ResponseUri);
-                    if (!string.IsNullOrEmpty(imageUrl))
+                    for (int i = 0; i < imageCollection.Count && i < MaxImageCount; i++)
                     {
-                        imageUrls.Add(imageUrl);
-                        MaxImageCount--;
-                    }                    
-                }
-
-                if (webhtml != null && webhtml.DocumentNode != null)
-                {
-                    string selectedImageFormat = GetSelectedImageFormat(Jpeg, Png);
-
-                    HtmlNodeCollection imageCollection = webhtml.DocumentNode.SelectNodes(selectedImageFormat);
-
-                    if (imageCollection != null)
-                    {
-                        for (int i = 0; i < imageCollection.Count && i < MaxImageCount; i++)
+                        string relativeSrc = imageCollection[i].Attributes["src"].Value;
+                        if (Url != null)
                         {
-                            string relativeSrc = imageCollection[i].Attributes["src"].Value;
-                            if (Url != null)
-                            {
-                                relativeSrc = CompleteRelativeUrl(relativeSrc, response.ResponseUri);
-                            }
-                            imageUrls.Add(relativeSrc);
+                            relativeSrc = CompleteRelativeUrl(relativeSrc, response.ResponseUri);
                         }
-                    }                   
+                        imageUrls.Add(relativeSrc);
+                    }
                 }
+            }
 
-                return imageUrls;            
+            return imageUrls;
 
         }
 
@@ -233,14 +238,11 @@ namespace Suyati.ImageFetcher
             if (Png)
                 selectedImageFormat = selectedImageFormat + "//img/@src[contains(@src,'.png')] |";
 
-            // if no image formt selected
-            if (String.IsNullOrEmpty(selectedImageFormat))
-            {
-                selectedImageFormat = "//img/@src[contains(@src,'.jpg')] | //img/@src[contains(@src,'.png')]";
-            }
             //Removing "|" from the selected format string 
-            if (selectedImageFormat.Substring(selectedImageFormat.Length - 1, 1) == "|")
+            if ((Jpeg || Png) && (selectedImageFormat.Substring(selectedImageFormat.Length - 1, 1) == "|"))
+            {
                 selectedImageFormat = selectedImageFormat.Remove(selectedImageFormat.Length - 1);
+            }
 
             return selectedImageFormat;
         }
