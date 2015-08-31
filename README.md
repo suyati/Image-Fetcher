@@ -30,6 +30,6 @@ var imagesUrls = imageFetcher.GetImages("www.sampleweburl.com”);
 3)	Parameters
 
 JPEG: Boolean (by default true), set true for fetching only JPEG images  
-PNG:  Boolean (by default false), set true for fetching only PNG images --  
-OgImage: Boolean (by default false) ,set true for fetching Og Image --
+PNG:  Boolean (by default false), set true for fetching only PNG images             
+OgImage: Boolean (by default false) ,set true for fetching Og Image                   
 MaxImageCount:  Integer (by default 2), set the maximum number of images needs to fetched.
