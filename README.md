@@ -37,3 +37,13 @@ JPEG: Boolean (by default true), set true for fetching only JPEG images
 PNG:  Boolean (by default false), set true for fetching only PNG images             
 OgImage: Boolean (by default false) ,set true for fetching Og Image                   
 MaxImageCount:  Integer (by default 2), set the maximum number of images needs to fetched.
+
+##Authors and Contributors
+XML Extractor is developed by Suyati Technologies. It is written and maintained by their Product Development team.
+
+####Author:
+
+Anoop Malayil (@t4anoop)
+
+##Support or Contact
+Have Suggestions? Want to give us something to do? Contact us at : support@suyati.com
