@@ -43,7 +43,7 @@ XML Extractor is developed by Suyati Technologies. It is written and maintained 
 
 ####Author:
 
-Anoop Malayil (@t4anoop)
+Anoop Malayil ([@t4anoop](https://twitter.com/t4anoop))
 
 ##Support or Contact
 Have Suggestions? Want to give us something to do? Contact us at : support@suyati.com
