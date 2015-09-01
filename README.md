@@ -1,5 +1,7 @@
 # Image-Fetcher
-Travis:    [![Travis](https://travis-ci.org/amalayil/Image-Fetcher.svg?branch=master)](https://travis-ci.org/amalayil/Image-Fetcher)
+[![Travis](https://travis-ci.org/amalayil/Image-Fetcher.svg?branch=master)](https://travis-ci.org/amalayil/Image-Fetcher)
+[![NuGet](http://img.shields.io/nuget/v/ImageFetcher.svg)](https://www.nuget.org/packages/ImageFetcher/)
+[![Downloads](http://img.shields.io/nuget/dt/ImageFetcher.svg)](https://www.nuget.org/packages/ImageFetcher/)
 
 Fetching images from a particular url
 
