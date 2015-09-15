@@ -4,7 +4,8 @@ using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Text.RegularExpressions;
-
+using System.Linq;
+using System.Text;
 namespace Suyati.ImageFetcher
 {
     /// <summary>
@@ -24,7 +25,7 @@ namespace Suyati.ImageFetcher
         /// <param name="OgImage"></param>
         /// <param name="MaxImageCount"></param>
         /// <returns></returns>
-        public List<string> GetImages(string Url, bool Jpeg = true, bool Png = false, bool OgImage = false, int MaxImageCount = 2)
+        public IList<string> GetImages(string Url, bool Jpeg = true, bool Png = false, bool OgImage = false, int MaxImageCount = 2)
         {
 
             // Add http to a non-http url
@@ -49,14 +50,38 @@ namespace Suyati.ImageFetcher
                 throw new WebException(response.ErrorMessage, response.ErrorException);
             }
 
-            HtmlDocument webhtml = new HtmlDocument();
 
             // response content is loaded into HtmlDocument
-            webhtml.LoadHtml(response.Content);
+            var content = response.Content;
+            var byteOrderMark = Encoding.UTF8.GetString(Encoding.UTF8.GetPreamble());
+            // Removing Byte Order Mark from Content
+            if (content.StartsWith(byteOrderMark))
+            {
+                content = content.Replace(byteOrderMark, string.Empty);
+            }
+            HtmlDocument webhtml = new HtmlDocument();
+            webhtml.LoadHtml(content);
 
             string imageUrl = string.Empty;
-            var imageUrls = new List<string>();
+            ISet<string> imageUrls = new HashSet<string>();
+            Func<string, bool> predicate = null;
+            if (Png && Jpeg)
+            {
+                predicate = new Func<string, bool>(url => url.IndexOf(".jpg", StringComparison.InvariantCultureIgnoreCase) != -1 || url.IndexOf(".png", StringComparison.InvariantCultureIgnoreCase) != -1);
+            }
+            else if (Png)
+            {
+                predicate = new Func<string, bool>(url => url.IndexOf(".png", StringComparison.InvariantCultureIgnoreCase) != -1);
+            }
+            else if (Jpeg)
+            {
+                predicate = new Func<string, bool>(url => url.IndexOf(".jpg", StringComparison.InvariantCultureIgnoreCase) != -1);
+            }
 
+            if (predicate != null)
+            {
+                imageUrls = GetTags(content, "img");
+            }
             //Fetching og image 
             if (OgImage)
             {
@@ -64,37 +89,16 @@ namespace Suyati.ImageFetcher
                 if (!string.IsNullOrEmpty(imageUrl))
                 {
                     imageUrls.Add(imageUrl);
-                    MaxImageCount--;
                 }
             }
-
-            if (webhtml != null && webhtml.DocumentNode != null)
+            var imageUrlList = imageUrls.Where(predicate).Take(MaxImageCount).ToList();
+            // Resolving relative Urls 
+            for (int i = 0; i < imageUrlList.Count; i++)
             {
-                string selectedImageFormats = GetSelectedImageFormat(Jpeg, Png);
-
-                if (string.IsNullOrEmpty(selectedImageFormats))
-                {
-                    return imageUrls;
-                }
-
-                HtmlNodeCollection imageCollection = webhtml.DocumentNode.SelectNodes(selectedImageFormats);
-
-                if (imageCollection != null)
-                {
-                    for (int i = 0; i < imageCollection.Count && i < MaxImageCount; i++)
-                    {
-                        string relativeSrc = imageCollection[i].Attributes["src"].Value;
-                        if (Url != null)
-                        {
-                            relativeSrc = CompleteRelativeUrl(relativeSrc, response.ResponseUri);
-                        }
-                        imageUrls.Add(relativeSrc);
-                    }
-                }
+                imageUrlList[i] = CompleteRelativeUrl(imageUrlList[i], response.ResponseUri);
             }
 
-            return imageUrls;
-
+            return imageUrlList;
         }
 
         #endregion Public Methods
@@ -119,6 +123,25 @@ namespace Suyati.ImageFetcher
             return Uri.IsWellFormedUriString(url, UriKind.Absolute);
         }
 
+        public ISet<string> GetTags(string content, string tagName)
+        {
+            ISet<string> matches = new HashSet<string>();
+            var regex = "<img[^>]+src ?= ?(\\\\?\"|')([^\"']+)(\\\\?\"|')[^>]+>";
+
+            if (Regex.IsMatch(content, regex))
+            {
+                foreach (Match m in Regex.Matches(content, regex, RegexOptions.Multiline))
+                {
+                    if (m.Success && m.Groups != null && m.Groups.Count > 2 && m.Groups[2].Success)
+                    {
+                        matches.Add(m.Groups[2].Value.TrimEnd('\\'));
+                    }
+                }
+            }
+
+            return matches;
+
+        }
         /// <summary>
         /// Appends http to a non-http url
         /// </summary>
